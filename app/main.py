@@ -1,10 +1,26 @@
 from fastapi import FastAPI
 from app.core.config import settings
 from app.api.v1.routes import router as main_router
+from app.core.middleware import register_middleware
 
-app = FastAPI(title=settings.PROJECT_NAME, version=settings.VERSION)
-version = settings.VERSION
-version_prefix =f"/api/{version}"
+description = """
+A REST API for edufacilis Web and Mobile Applications.
+handle all the requests for the edufacilis Web and Mobile Applications.
+
+"""
+
+app = FastAPI(title=settings.PROJECT_NAME,
+                description=description,
+               version=settings.VERSION,
+               contact={
+                    "name": "Edufacilis",
+                    "url": "https://edufacilis.app",
+                    "email": "gddimpactsoftwares@gmail.com",
+                },
+               )
+version_prefix =f"/api/v1"
 app.include_router(main_router, prefix=version_prefix)
+
+register_middleware(app)
 
 
