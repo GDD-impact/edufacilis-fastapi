@@ -18,13 +18,13 @@ def setup_periodic_tasks(sender: Celery, **kwargs):
     sender.add_periodic_task(
         crontab(minute=0, hour=9),  # Runs daily at 9 AM
         send_email_task.s("admin@example.com", "Daily Update", "This is your daily update."),
-        name="Daily email task",
+        name="send_email_task",
     )
 
     sender.add_periodic_task(
         crontab(minute=0, hour=0, day_of_month=1),  # Runs on the 1st of every month
         generate_report_task.s("Monthly Sales"),
-        name="Monthly sales report",
+        name="generate_report_task",
     )
 
     # 📌 **Dynamically Loaded Tasks from DB**

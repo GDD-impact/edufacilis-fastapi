@@ -23,7 +23,9 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_scheduler=PersistentScheduler,
-    beat_schedule={},
+    beat_schedule={
+        
+    },
 )
 
 

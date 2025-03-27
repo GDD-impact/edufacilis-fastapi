@@ -4,7 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
-from app.api.v1.auth.models import User 
+from app.api.v1.auth.models import User
+from app.workers.models import PeriodicTask
 from app.core.database import Base
 
 # Load environment variables from .env
