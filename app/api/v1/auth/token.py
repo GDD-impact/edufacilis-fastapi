@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from . import schemas
+from itsdangerous import URLSafeTimedSerializer
+import logging
 
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
@@ -22,3 +24,22 @@ def verify_token(token:str,credentials_exception):
         token_data = schemas.TokenData(email=email)
     except JWTError:
         raise credentials_exception
+    
+serializer = URLSafeTimedSerializer(
+    secret_key=SECRET_KEY, salt="email-configuration"
+)
+
+def create_url_safe_token(data: dict):
+
+    token = serializer.dumps(data)
+
+    return token
+
+def decode_url_safe_token(token:str):
+    try:
+        token_data = serializer.loads(token)
+
+        return token_data
+    
+    except Exception as e:
+        logging.error(str(e))
