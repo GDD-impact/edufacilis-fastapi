@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-router = APIRouter()
+teacher_router = APIRouter()
 
-@router.get("/")
+@teacher_router.get("/")
 def get_teachers():
     return {"Hello": "Teachers"}

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-from app.api.v1.teacher.routes import router as teacher_router
-from app.api.v1.student.routes import router as student_router
+from app.api.v1.teacher.routes import teacher_router
+from app.api.v1.student.routes import student_router 
 
 router = APIRouter()
 

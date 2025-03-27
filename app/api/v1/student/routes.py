@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 
 
-router = APIRouter()
+student_router = APIRouter()
 
-@router.get("/")
+@student_router.get("/")
 def get_students(db: AsyncSession = Depends(get_db)):
     return {"Hello": "Students", "status": "database connection successful"}
