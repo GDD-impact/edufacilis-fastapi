@@ -4,7 +4,7 @@ from .config import settings
 from sqlalchemy.ext.declarative import declarative_base
 
 # Create Async Engine
-engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG)
+engine = create_async_engine(settings.POSTGRES_URL, echo=settings.DEBUG)
 
 Base = declarative_base()
 

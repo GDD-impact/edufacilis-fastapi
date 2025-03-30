@@ -1,7 +1,11 @@
 from enum import Enum
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
+from datetime import datetime,timezone
 from app.core.database import Base
+
 
 # Enum for user roles
 class Role(str, Enum):
@@ -9,10 +13,11 @@ class Role(str, Enum):
     TEACHER = "teacher"
     STUDENT = "student"
 
+
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     first_name = Column(String, nullable=False)
     last_name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -20,62 +25,33 @@ class User(Base):
     address = Column(String, nullable=True)
     state = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    password = Column(String, nullable=False)
+    password_hash = Column(String, nullable=False)
     avatar = Column(String, nullable=True)
     bio = Column(String, nullable=True)
     gender = Column(String, nullable=True)
     role = Column(String, nullable=False, default=Role.STUDENT.value)
-    email_verified = Column(Boolean, default=False)
+    is_verified = Column(Boolean, default=False)
     two_factor_enabled = Column(Boolean, default=False)
     is_oauth = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    # Relationship with verification tokens
-    verification_tokens = relationship("VerificationToken", back_populates="user", cascade="all, delete-orphan")
-    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
     activities = relationship("Activity", back_populates="user", cascade="all, delete-orphan")
 
-class VerificationToken(Base):
-    __tablename__ = "verification_tokens"
-
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, index=True, nullable=False)
-    expires_at = Column(String, nullable=False)
-    user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    
-
-    user_rel = relationship("User", back_populates="verification_tokens", foreign_keys=[user])
-
-class PasswordResetToken(Base):
-    __tablename__ = "password_reset_tokens"
-
-    id = Column(Integer, primary_key=True, index=True)
-    token = Column(String, index=True, nullable=False)
-    expires_at = Column(String, nullable=False)
-    user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    
-
-    user_rel = relationship("User", back_populates="password_reset_tokens", foreign_keys=[user])
 
 class ActivityType(str, Enum):
     CREATE = "create"
     UPDATE = "update"
     DELETE = "delete"
 
+
 class Activity(Base):
     __tablename__ = "activities"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
     description = Column(String, nullable=False)
     activity_type = Column(String, nullable=False, default=ActivityType.CREATE.value)
-    created_at = Column(String, nullable=False)
-    user = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
+    user = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False) 
 
     user_rel = relationship("User", back_populates="activities", foreign_keys=[user])
-
-
-
-
-
-
-

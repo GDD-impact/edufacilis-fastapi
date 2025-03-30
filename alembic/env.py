@@ -12,11 +12,11 @@ from app.core.database import Base
 load_dotenv()
 
 # Get the database URL from .env
-DATABASE_URL = os.getenv("DATABASE_URL")
+POSTGRES_URL = os.getenv("POSTGRES_URL")
 
-# Ensure the DATABASE_URL starts with "postgresql+asyncpg://"
-if not DATABASE_URL.startswith("postgresql+asyncpg://"):
-    raise ValueError("DATABASE_URL must use asyncpg driver (postgresql+asyncpg://)")
+# Ensure the POSTGRES_URL starts with "postgresql+asyncpg://"
+if not POSTGRES_URL.startswith("postgresql+asyncpg://"):
+    raise ValueError("POSTGRES_URL must use asyncpg driver (postgresql+asyncpg://)")
 
 # Alembic Config object
 config = context.config
@@ -32,7 +32,7 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode."""
     context.configure(
-        url=DATABASE_URL,
+        url=POSTGRES_URL,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -44,7 +44,7 @@ def run_migrations_offline() -> None:
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode with async support."""
-    connectable = create_async_engine(DATABASE_URL, poolclass=pool.NullPool)
+    connectable = create_async_engine(POSTGRES_URL, poolclass=pool.NullPool)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
