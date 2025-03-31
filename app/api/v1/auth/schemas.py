@@ -1,8 +1,15 @@
 import uuid
 from typing import List, Optional
+from enum import Enum
 from pydantic import BaseModel, Field, EmailStr
 import uuid
 from datetime import datetime
+
+
+class Role(str, Enum):
+    ADMIN = "admin"
+    TEACHER = "teacher"
+    STUDENT = "student"
 
 
 class UserCreateModel(BaseModel):
@@ -22,6 +29,24 @@ class UserCreateModel(BaseModel):
         }
     }
 
+class OauthUserCreateModel(BaseModel):
+    first_name: str = Field(max_length=25)
+    last_name: str = Field(max_length=25)
+    email: str = Field(max_length=40)
+    is_verified: bool = False
+    is_oauth: bool = False
+    avatar: Optional[str] = None
+
+class UserResponseModel(BaseModel):
+    id: uuid.UUID
+    first_name: str
+    last_name: str
+    email: EmailStr  # Ensures email validation
+    phone: Optional[str] = None
+    avatar: Optional[str] = None
+    gender: Optional[str] = None
+    role: Role = Role.STUDENT
+
 
 class UserModel(BaseModel):
     id: uuid.UUID
@@ -36,7 +61,7 @@ class UserModel(BaseModel):
     avatar: Optional[str] = None
     bio: Optional[str] = None
     gender: Optional[str] = None
-    role: str = Field(default="student")  # Default role is "student"
+    role: Role = Role.STUDENT
     is_verified: bool = False
     two_factor_enabled: bool = False
     is_oauth: bool = False

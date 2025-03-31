@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, status, BackgroundTasks, Query
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.v1 import auth
 from app.core.database import async_get_db
 from app.core.redis import token_in_blocklist, add_jti_to_blocklist
 
@@ -12,14 +14,17 @@ from .dependencies import (
     RefreshTokenBearer,
     RoleChecker,
     get_current_user,
+    verify_oauth_token,
 )
 from .schemas import (
+    OauthUserCreateModel,
     UserCreateModel,
     UserLoginModel,
     UserModel,
     EmailModel,
     PasswordResetRequestModel,
     PasswordResetConfirmModel,
+    UserResponseModel,
 )
 from .service import UserService
 from .utils import (
@@ -32,6 +37,7 @@ from .utils import (
 from .errors import UserAlreadyExists, UserNotFound, InvalidCredentials, InvalidToken
 from app.core.config import settings
 from app.workers.tasks import send_email_task, send_multiple_email_task
+from typing import List
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -247,4 +253,101 @@ async def reset_account_password(
     return JSONResponse(
         content={"message": "Error occured during password reset."},
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+
+
+@auth_router.get("/users", response_model=List[UserResponseModel])
+async def fetch_users(
+    role: str = Query("All", enum=["All", "admin", "teacher", "student"]),
+    limit: int = Query(10, gt=0),  # Default 10 users per page
+    offset: int = Query(0, ge=0),  # Default start from 0
+    session: AsyncSession = Depends(async_get_db)
+):
+    users = await user_service.get_users(role, limit, offset, session)
+    return users
+
+
+@auth_router.delete("/delete_user/{user_id}")
+async def delete_user(
+        user_id: UUID,
+        session: AsyncSession = Depends(async_get_db),
+):
+    deleted = await user_service.delete_user(user_id, session)
+
+    if deleted:
+        return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_204_NO_CONTENT)
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                        detail="User not found")
+
+
+@auth_router.put("/update-user")
+async def update_user(
+    user_data: UserCreateModel,  # Model containing fields you want to allow for update
+    user: UserModel = Depends(get_current_user),
+    session: AsyncSession = Depends(async_get_db)
+):
+    # Check if the email already exists
+    user_exists = await user_service.user_exists(user_data.email, session)
+
+    if user_exists and user_data.email != user.email:
+        raise HTTPException(
+            detail="Email is already in use by another account.",
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+    updated_user = await user_service.update_user(user, user_data.model_dump(), session)
+
+    return JSONResponse(
+        content={"message": "User information updated successfully",
+                 "user": updated_user},
+        status_code=status.HTTP_200_OK
+    )
+
+
+@auth_router.post("/oauth-login")
+async def oauth_login(
+    oauth_token: str,
+    provider: str,
+    session: AsyncSession = Depends(async_get_db)
+):
+    user_data = await verify_oauth_token(oauth_token, provider)
+
+    if not user_data:
+        raise InvalidToken()
+
+    user = await user_service.get_user_by_email(user_data["email"], session)
+
+    if not user:
+        # If user doesn't exist, create a new one
+        new_user_data = OauthUserCreateModel(
+            email=user_data["email"],
+            first_name=user_data["first_name"],
+            last_name=user_data["last_name"],
+            is_verified=True,
+            is_oauth=True,
+            avatar=user_data["avatar"]
+        )
+        user = await user_service.create_user(new_user_data, session)
+
+    # Generate and return access and refresh tokens
+    access_token = create_access_token(
+        user_data={"email": user.email, "user_uid": str(
+            user.id), "role": user.role}
+    )
+
+    refresh_token = create_access_token(
+        user_data={"email": user.email, "user_uid": str(user.id)},
+        refresh=True,
+        expiry=timedelta(days=REFRESH_TOKEN_EXPIRY),
+    )
+
+    return JSONResponse(
+        content={
+            "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": {"email": user.email, "uid": str(user.id)},
+        },
+        status_code=status.HTTP_200_OK
     )
