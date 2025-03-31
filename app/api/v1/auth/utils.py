@@ -3,6 +3,8 @@ import uuid
 from datetime import datetime, timedelta
 from itsdangerous import URLSafeTimedSerializer
 import jwt
+import bcrypt
+bcrypt.__about__ = bcrypt
 from passlib.context import CryptContext
 from app.core.config import settings
 
@@ -15,7 +17,6 @@ ACCESS_TOKEN_EXPIRY = 3600
 
 def generate_passwd_hash(password: str) -> str:
     hash = passwd_context.hash(password)
-
     return hash
 
 

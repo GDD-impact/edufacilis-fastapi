@@ -31,8 +31,7 @@ from .utils import (
 )
 from .errors import UserAlreadyExists, UserNotFound, InvalidCredentials, InvalidToken
 from app.core.config import settings
-
-from app.workers.tasks import send_email_task
+from app.workers.tasks import send_email_task, send_multiple_email_task
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -50,7 +49,7 @@ async def send_mail(emails: EmailModel):
     html = "<h1>Welcome to the app</h1>"
     subject = "Welcome to our app"
 
-    send_email_task.delay(emails, subject, html)
+    send_multiple_email_task.delay(emails, subject, html)
 
     return {"message": "Email sent successfully"}
 
@@ -58,7 +57,6 @@ async def send_mail(emails: EmailModel):
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def create_user_Account(
     user_data: UserCreateModel,
-    bg_tasks: BackgroundTasks,
     session: AsyncSession = Depends(async_get_db),
 ):
     """
@@ -88,11 +86,11 @@ async def create_user_Account(
 
     subject = "Verify Your email"
 
-    send_email_task.delay(emails, subject, html)
+    send_email_task.delay(emails, subject, html, True)
 
     return {
         "message": "Account Created! Check email to verify your account",
-        "user": new_user,
+        "user": UserModel.model_validate(new_user),
     }
 
 
@@ -205,7 +203,7 @@ async def password_reset_request(email_data: PasswordResetRequestModel):
     """
     subject = "Reset Your Password"
 
-    send_email_task.delay([email], subject, html_message)
+    send_email_task.delay([email], subject, html_message, True)
     return JSONResponse(
         content={
             "message": "Please check your email for instructions to reset your password",

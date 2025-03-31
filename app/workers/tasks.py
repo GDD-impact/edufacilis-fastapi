@@ -1,4 +1,6 @@
 from typing import List
+
+from app.core.mail import send_email, send_multiple_emails
 from .celery_app import celery_app
 import logging
 
@@ -7,10 +9,26 @@ logger.setLevel(logging.INFO)
 
 
 @celery_app.task(name="send_email_task")
-def send_email_task(email: List[str], subject: str, body: str):
+def send_email_task(email: List[str], subject: str, body: str, use_resend: bool = False):
     """Send an email (Example Task)"""
-    print(f"Sending email to {email} with subject: {subject}")
-    return f"Email sent to {email}"
+    send_email(
+        email,
+        subject,
+        body,
+        use_resend
+    )
+    return f"Emails sent successfully"
+
+
+@celery_app.task(name="send_multiple_email_task")
+def send_multiple_email_task(emails: List[str], subject: str, body: str):
+    """Send an email (Example Task)"""
+    send_multiple_emails(
+        emails,
+        subject,
+        body
+    )
+    return f"Emails sent successfully"
 
 
 @celery_app.task(name="generate_report_task")

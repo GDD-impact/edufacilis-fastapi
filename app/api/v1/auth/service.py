@@ -34,4 +34,3 @@ class UserService:
         await session.commit()
         await session.refresh(user)  # Refresh instance after commit
         return user
-

@@ -10,17 +10,15 @@ handle all the requests for the edufacilis Web and Mobile Applications.
 """
 
 app = FastAPI(title=settings.PROJECT_NAME,
-                description=description,
-               version=settings.VERSION,
-               contact={
-                    "name": "Edufacilis",
-                    "url": "https://edufacilis.app",
-                    "email": "gddimpactsoftwares@gmail.com",
-                },
-               )
-version_prefix =f"/api/v1"
+              description=description,
+              version=settings.VERSION,
+              contact={
+                  "name": "Edufacilis",
+                  "url": "https://edufacilis.app",
+                  "email": "gddimpactsoftwares@gmail.com",
+              },
+              )
+version_prefix = f"/api/v1"
 app.include_router(main_router, prefix=version_prefix)
 
 register_middleware(app)
-
-
