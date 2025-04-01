@@ -59,15 +59,7 @@ def create_exception_handler(
     """Creates a reusable exception handler."""
     
     async def exception_handler(request: Request, exc: Exception):  
-        print(f"Exception: {exc}")  # ✅ Log the actual exception
-        response_detail = {
-            "message": initial_detail["message"],
-            "error_code": initial_detail["error_code"],
-        }
-        if "resolution" in initial_detail:
-            response_detail["resolution"] = initial_detail["resolution"]
-
-        return JSONResponse(content=response_detail, status_code=status_code)
+        return JSONResponse(content=initial_detail, status_code=status_code)
 
     return exception_handler
 
