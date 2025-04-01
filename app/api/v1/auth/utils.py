@@ -1,13 +1,12 @@
+from app.core.config import settings
+from passlib.context import CryptContext
 import logging
 import uuid
 from datetime import datetime, timedelta
 from itsdangerous import URLSafeTimedSerializer
-import jwt
+import jwt as pyjwt
 import bcrypt
 bcrypt.__about__ = bcrypt
-from passlib.context import CryptContext
-from app.core.config import settings
-
 
 
 passwd_context = CryptContext(schemes=["bcrypt"])
@@ -38,7 +37,7 @@ def create_access_token(
 
     payload["refresh"] = refresh
 
-    token = jwt.encode(
+    token = pyjwt.encode(
         payload=payload, key=settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM
     )
 
@@ -47,13 +46,14 @@ def create_access_token(
 
 def decode_token(token: str) -> dict:
     try:
-        token_data = jwt.decode(
-            jwt=token, key=settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM]
+        token_data = pyjwt.decode(
+            jwt=token, key=settings.JWT_SECRET, algorithms=[
+                settings.JWT_ALGORITHM]
         )
 
         return token_data
 
-    except jwt.PyJWTError as e:
+    except pyjwt.PyJWTError as e:
         logging.exception(e)
         return None
 
