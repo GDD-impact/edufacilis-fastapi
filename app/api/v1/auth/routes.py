@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1 import auth
 from app.core.database import async_get_db
+from app.core.mail import send_email
 from app.core.redis import token_in_blocklist, add_jti_to_blocklist
 
 from .dependencies import (
@@ -65,6 +66,7 @@ async def send_mail(emails: EmailModel):
 @auth_router.post("/signup", status_code=status.HTTP_201_CREATED)
 async def create_user_Account(
     user_data: UserCreateModel,
+    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(async_get_db),
 ):
     """
@@ -94,12 +96,12 @@ async def create_user_Account(
 
     subject = "Verify Your email"
 
-    send_email_task.delay(emails, subject, html, True)
+    background_tasks.add_task(send_email, emails, subject, html, True)
 
     return JSONResponse(
         content={
             "message": "Account Created! Check email to verify your account",
-            "user": UserModel.model_validate(new_user),
+            "user": new_user,
         },
         status_code=status.HTTP_201_CREATED
     )
@@ -107,11 +109,8 @@ async def create_user_Account(
 
 @auth_router.get("/verify/{token}")
 async def verify_user_account(token: str, session: AsyncSession = Depends(async_get_db)):
-
     token_data = decode_url_safe_token(token)
-
     user_email = token_data.get("email")
-
     if user_email:
         user = await user_service.get_user_by_email(user_email, session)
 
@@ -202,9 +201,11 @@ async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
 
 
 @auth_router.post("/password-reset-request")
-async def password_reset_request(email_data: PasswordResetRequestModel):
+async def password_reset_request(
+    email_data: PasswordResetRequestModel,
+    background_tasks: BackgroundTasks
+    ):
     email = email_data.email
-
     token = create_url_safe_token({"email": email})
 
     link = f"http://{settings.DOMAIN}/api/v1/auth/password-reset-confirm/{token}"
@@ -214,8 +215,8 @@ async def password_reset_request(email_data: PasswordResetRequestModel):
     <p>Please click this <a href="{link}">link</a> to Reset Your Password</p>
     """
     subject = "Reset Your Password"
+    background_tasks.add_task(send_email, [email], subject, html_message, True)
 
-    send_email_task.delay([email], subject, html_message, True)
     return JSONResponse(
         content={
             "message": "Please check your email for instructions to reset your password",
@@ -265,8 +266,8 @@ async def reset_account_password(
 @auth_router.get("/users", response_model=List[UserResponseModel])
 async def fetch_users(
     role: str = Query("All", enum=["All", "admin", "teacher", "student"]),
-    limit: int = Query(10, gt=0),  # Default 10 users per page
-    offset: int = Query(0, ge=0),  # Default start from 0
+    limit: int = Query(10, gt=0),
+    offset: int = Query(0, ge=0),
     _: bool = Depends(admin_checker),
     session: AsyncSession = Depends(async_get_db)
 ):
@@ -283,7 +284,7 @@ async def delete_user(
     deleted = await user_service.delete_user(user_id, session)
 
     if deleted:
-        return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_204_NO_CONTENT)
+        return JSONResponse(content={"message": "User deleted successfully"}, status_code=status.HTTP_200_OK)
 
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                         detail="User not found")

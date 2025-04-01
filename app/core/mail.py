@@ -27,7 +27,7 @@ mail = FastMail(config=mail_config)
 resend.api_key = settings.RESEND_API_KEY
 
 
-async def send_email(
+def send_email(
     recipients: List[str], subject: str, body: str, use_resend: bool = False
 ):
     """
@@ -58,13 +58,13 @@ async def send_email(
             recipients=recipients, subject=subject, body=body, subtype=MessageType.html
         )
         try:
-            await mail.send_message(message)
+            mail.send_message(message)
             return {"status": "success", "provider": "fastapi-mail"}
         except Exception as e:
             return {"status": "error", "provider": "fastapi-mail", "error": str(e)}
 
 
-async def send_multiple_emails(recipients: List[str], subject: str, body: str):
+def send_multiple_emails(recipients: List[str], subject: str, body: str):
     """
     Send multiple emails using Resend only
     - `recipients`: List of recipient emails

@@ -51,6 +51,10 @@ class UserResponseModel(BaseModel):
     gender: Optional[str] = None
     role: Role = Role.STUDENT
 
+    class Config:
+        json_encoders = {uuid.UUID: str}
+
+
 
 class UserModel(BaseModel):
     id: uuid.UUID
@@ -72,6 +76,7 @@ class UserModel(BaseModel):
     created_at: datetime
 
     class Config:
+        json_encoders = {uuid.UUID: str}
         from_attributes = True  # Enables ORM compatibility for SQLAlchemy integration
 
 
