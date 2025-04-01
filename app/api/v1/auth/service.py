@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import async_get_db
 from .models import User
-from .schemas import UserCreateModel
+from .schemas import OauthUserCreateModel, UserCreateModel
 from .utils import generate_passwd_hash
 from typing import Optional, List
 
@@ -40,6 +40,15 @@ class UserService:
         user_data_dict = user_data.model_dump()
         user_data_dict["password_hash"] = generate_passwd_hash(
             user_data_dict.pop("password"))
+        new_user = User(**user_data_dict)
+        session.add(new_user)
+        await session.commit()
+        # Ensure we return the updated instance
+        await session.refresh(new_user)
+        return new_user
+    
+    async def create_oauth_user(self, user_data: OauthUserCreateModel, session: AsyncSession = Depends(async_get_db)) -> User:
+        user_data_dict = user_data.model_dump()
         new_user = User(**user_data_dict)
         session.add(new_user)
         await session.commit()

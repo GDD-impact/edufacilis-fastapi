@@ -17,6 +17,7 @@ class UserCreateModel(BaseModel):
     last_name: str = Field(max_length=25)
     email: str = Field(max_length=40)
     password: str = Field(min_length=6)
+    role: Role = Role.STUDENT
 
     model_config = {
         "json_schema_extra": {
@@ -25,9 +26,11 @@ class UserCreateModel(BaseModel):
                 "last_name": "Doe",
                 "email": "johndoe123@co.com",
                 "password": "testpass123",
+                "role": "student",
             }
         }
     }
+
 
 class OauthUserCreateModel(BaseModel):
     first_name: str = Field(max_length=25)
@@ -36,6 +39,7 @@ class OauthUserCreateModel(BaseModel):
     is_verified: bool = False
     is_oauth: bool = False
     avatar: Optional[str] = None
+
 
 class UserResponseModel(BaseModel):
     id: uuid.UUID
@@ -69,6 +73,22 @@ class UserModel(BaseModel):
 
     class Config:
         from_attributes = True  # Enables ORM compatibility for SQLAlchemy integration
+
+
+class UserUpdateModel(BaseModel):
+    first_name: str
+    last_name: str
+    email: EmailStr  # Ensures email validation
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None
+    avatar: Optional[str] = None
+    bio: Optional[str] = None
+    gender: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 class UserLoginModel(BaseModel):

@@ -25,6 +25,7 @@ from .schemas import (
     PasswordResetRequestModel,
     PasswordResetConfirmModel,
     UserResponseModel,
+    UserUpdateModel,
 )
 from .service import UserService
 from .utils import (
@@ -42,6 +43,7 @@ from typing import List
 auth_router = APIRouter()
 user_service = UserService()
 role_checker = RoleChecker(["admin", "teacher", "student"])
+admin_checker = RoleChecker(["admin"])
 
 
 REFRESH_TOKEN_EXPIRY = 2
@@ -94,10 +96,13 @@ async def create_user_Account(
 
     send_email_task.delay(emails, subject, html, True)
 
-    return {
-        "message": "Account Created! Check email to verify your account",
-        "user": UserModel.model_validate(new_user),
-    }
+    return JSONResponse(
+        content={
+            "message": "Account Created! Check email to verify your account",
+            "user": UserModel.model_validate(new_user),
+        },
+        status_code=status.HTTP_201_CREATED
+    )
 
 
 @auth_router.get("/verify/{token}")
@@ -159,7 +164,8 @@ async def login_users(
                     "access_token": access_token,
                     "refresh_token": refresh_token,
                     "user": {"email": user.email, "uid": str(user.id)},
-                }
+                },
+                status_code=status.HTTP_200_OK
             )
 
     raise InvalidCredentials()
@@ -252,7 +258,7 @@ async def reset_account_password(
 
     return JSONResponse(
         content={"message": "Error occured during password reset."},
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
     )
 
 
@@ -261,6 +267,7 @@ async def fetch_users(
     role: str = Query("All", enum=["All", "admin", "teacher", "student"]),
     limit: int = Query(10, gt=0),  # Default 10 users per page
     offset: int = Query(0, ge=0),  # Default start from 0
+    _: bool = Depends(admin_checker),
     session: AsyncSession = Depends(async_get_db)
 ):
     users = await user_service.get_users(role, limit, offset, session)
@@ -270,6 +277,7 @@ async def fetch_users(
 @auth_router.delete("/delete_user/{user_id}")
 async def delete_user(
         user_id: UUID,
+        _: UserModel = Depends(get_current_user),
         session: AsyncSession = Depends(async_get_db),
 ):
     deleted = await user_service.delete_user(user_id, session)
@@ -283,7 +291,7 @@ async def delete_user(
 
 @auth_router.put("/update-user")
 async def update_user(
-    user_data: UserCreateModel,  # Model containing fields you want to allow for update
+    user_data: UserUpdateModel,
     user: UserModel = Depends(get_current_user),
     session: AsyncSession = Depends(async_get_db)
 ):
@@ -300,7 +308,8 @@ async def update_user(
 
     return JSONResponse(
         content={"message": "User information updated successfully",
-                 "user": updated_user},
+                 "user": updated_user
+                 },
         status_code=status.HTTP_200_OK
     )
 
@@ -326,9 +335,10 @@ async def oauth_login(
             last_name=user_data["last_name"],
             is_verified=True,
             is_oauth=True,
+            login_provider=provider,
             avatar=user_data["avatar"]
         )
-        user = await user_service.create_user(new_user_data, session)
+        user = await user_service.create_oauth_user(new_user_data, session)
 
     # Generate and return access and refresh tokens
     access_token = create_access_token(
@@ -347,7 +357,7 @@ async def oauth_login(
             "message": "Login successful",
             "access_token": access_token,
             "refresh_token": refresh_token,
-            "user": {"email": user.email, "uid": str(user.id)},
+            "user": {"email": user.email, "id": str(user.id)},
         },
         status_code=status.HTTP_200_OK
     )

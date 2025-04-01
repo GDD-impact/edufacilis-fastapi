@@ -26,7 +26,7 @@ class User(Base):
     address = Column(String, nullable=True)
     state = Column(String, nullable=True)
     country = Column(String, nullable=True)
-    password_hash = Column(String, nullable=False)
+    password_hash = Column(String, nullable=True)
     avatar = Column(String, nullable=True)
     bio = Column(String, nullable=True)
     gender = Column(String, nullable=True)
@@ -34,6 +34,8 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
     two_factor_enabled = Column(Boolean, default=False)
     is_oauth = Column(Boolean, default=False)
+    login_provider = Column(String, nullable=True, default="email")
+    profile_completed = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
     activities = relationship(
