@@ -50,6 +50,7 @@ def send_email(
             email_response = resend.Emails.send(params)
             return {"status": "success", "provider": "resend", "response": email_response}
         except Exception as e:
+            print(str(e))
             return {"status": "error", "provider": "resend", "error": str(e)}
 
     else:
@@ -61,6 +62,7 @@ def send_email(
             mail.send_message(message)
             return {"status": "success", "provider": "fastapi-mail"}
         except Exception as e:
+            print(str(e))
             return {"status": "error", "provider": "fastapi-mail", "error": str(e)}
 
 

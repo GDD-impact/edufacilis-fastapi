@@ -83,7 +83,9 @@ async def create_user_Account(
 
     new_user = await user_service.create_user(user_data, session)
 
+
     token = create_url_safe_token({"email": email})
+    print(token)
 
     link = f"http://{settings.DOMAIN}/api/v1/auth/verify/{token}"
 
@@ -101,7 +103,7 @@ async def create_user_Account(
     return JSONResponse(
         content={
             "message": "Account Created! Check email to verify your account",
-            "user": new_user,
+            "user": UserModel.model_validate(new_user).model_dump(),
         },
         status_code=status.HTTP_201_CREATED
     )

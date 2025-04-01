@@ -1,7 +1,7 @@
 import uuid
 from typing import List, Optional
 from enum import Enum
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, field_serializer
 import uuid
 from datetime import datetime
 
@@ -51,9 +51,9 @@ class UserResponseModel(BaseModel):
     gender: Optional[str] = None
     role: Role = Role.STUDENT
 
-    class Config:
-        json_encoders = {uuid.UUID: str}
-
+    @field_serializer("id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)
 
 
 class UserModel(BaseModel):
@@ -75,8 +75,15 @@ class UserModel(BaseModel):
     is_oauth: bool = False
     created_at: datetime
 
+    @field_serializer("id")
+    def serialize_uuid(self, value: uuid.UUID) -> str:
+        return str(value)
+    
+    @field_serializer("created_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        return value.isoformat()
+
     class Config:
-        json_encoders = {uuid.UUID: str}
         from_attributes = True  # Enables ORM compatibility for SQLAlchemy integration
 
 
