@@ -5,6 +5,8 @@ from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
 from app.api.v1.auth.models import User
+from app.api.v1.teacher.models import Teacher
+from app.api.v1.classes.models import TeachersClass
 from app.workers.models import PeriodicTask
 from app.core.database import Base
 
