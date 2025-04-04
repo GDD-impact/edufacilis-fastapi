@@ -12,11 +12,11 @@ class Teacher(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
 
-    # ✅ One-to-One Relationship with User (User can be either a Teacher or Student)
+    # One-to-One Relationship with User (User can be either a Teacher or Student)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     user = relationship("User", back_populates="teacher", uselist=False)
 
-    # ✅ Store `classes` and `subjects` as JSON lists (Array-like storage)
+    # Store `classes` and `subjects` as JSON lists (Array-like storage)
     classes = Column(JSON, nullable=False, default=[])
     subjects = Column(JSON, nullable=False, default=[])
 
@@ -28,6 +28,6 @@ class Teacher(Base):
 
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
 
-    # ✅ Reverse Relationships
+    # Reverse Relationships
     subject_teachers_classes = relationship("SubjectTeachersClass", back_populates="teacher")
     teachers_class = relationship("TeachersClass", back_populates="teacher", uselist=False)
