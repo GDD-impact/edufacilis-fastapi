@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.api.v1.auth.errors import register_all_errors
 from app.core.config import settings
-from app.api.v1.routes import router as main_router
+from app.core.routes import router as main_router
 from app.core.middleware import register_middleware
 
 description = """
@@ -24,3 +24,7 @@ app.include_router(main_router, prefix=version_prefix)
 
 register_all_errors(app)
 register_middleware(app)
+
+@app.get("/", tags=["Root"])
+async def read_root():
+    return {"message": "Welcome to the Edufacilis API!"}
