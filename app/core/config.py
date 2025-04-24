@@ -22,16 +22,17 @@ class Settings(BaseSettings):
     # Auth Settings
     JWT_SECRET: str = os.getenv("JWT_SECRET", "secret")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "secret")
+    ACCESS_TOKEN_EXPIRY: int = int(os.getenv("ACCESS_TOKEN_EXPIRY", 172800))
+    REFRESH_TOKEN_EXPIRY: int = int(os.getenv("REFRESH_TOKEN_EXPIRY", 604800))
 
     # Mail and Resend Settings
-    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME")
-    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD")
-    MAIL_FROM: str = os.getenv("MAIL_FROM")
-    MAIL_SERVER: str = os.getenv("MAIL_SERVER")
-    MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME")
-    MAIL_PORT: int = os.getenv("MAIL_PORT", 587)
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY")
     RESEND_MAIL_FROM: str = os.getenv("RESEND_MAIL_FROM")
+
+    # Oauth Secrets
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
+    GOOGLE_REDIRECT_URL : str = os.getenv("GOOGLE_REDIRECT_URL", "http://localhost:8000/api/v1/auth/callback/google")
 
     class Config:
         env_file = ".env"  # Load from .env file

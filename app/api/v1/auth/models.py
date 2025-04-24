@@ -1,5 +1,5 @@
 from enum import Enum
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
+from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime,UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -40,6 +40,62 @@ class User(Base):
 
     activities = relationship(
         "Activity", back_populates="user", cascade="all, delete-orphan")
+    
+class VerificationToken(Base):
+    __tablename__ = "verification_token"
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
+    email = Column(String, nullable=False)
+    token = Column(String, unique=True, nullable=False)
+    expires = Column(DateTime(timezone=True), default=lambda: datetime.now(
+        timezone.utc), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("email", "token", name="uq_verification_email_token"),
+    )
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_token"
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
+    email = Column(String, nullable=False)
+    token = Column(String, unique=True, nullable=False)
+    expires = Column(DateTime(timezone=True), default=lambda: datetime.now(
+        timezone.utc), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("email", "token", name="uq_password_email_token"),
+    )
+
+
+class TwoFactorToken(Base):
+    __tablename__ = "two_factor_token"
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
+    email = Column(String, nullable=False)
+    token = Column(String, unique=True, nullable=False)
+    expires = Column(DateTime(timezone=True), default=lambda: datetime.now(
+        timezone.utc), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("email", "token", name="uq_2fa_email_token"),
+    )
+
+
+class TwoFactorConfirmation(Base):
+    __tablename__ = "two_factor_confirmation"
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey(
+        "users.id", ondelete="CASCADE"), nullable=False)  # Ensure correct foreign key reference
+
+    user = relationship("User", back_populates="two_factor_confirmation")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", name="uq_2fa_user"),
+    )
+
 
 
 class ActivityType(str, Enum):

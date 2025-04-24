@@ -25,6 +25,7 @@ app.include_router(main_router, prefix=version_prefix)
 register_all_errors(app)
 register_middleware(app)
 
+
 @app.get("/", tags=["Root"])
 async def read_root():
     return {"message": "Welcome to the Edufacilis API!"}

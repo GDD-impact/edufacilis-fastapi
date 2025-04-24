@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy import pool
 from alembic import context
 from dotenv import load_dotenv
-from app.api.v1.auth.models import User
-from app.api.v1.teacher.models import Teacher
-from app.api.v1.classes.models import TeachersClass
-from app.workers.models import PeriodicTask
+from app.api.v1.auth.models import *
+from app.api.v1.teacher.models import *
+from app.api.v1.classes.models import *
+from app.workers.models import *
 from app.core.database import Base
 
 # Load environment variables from .env
