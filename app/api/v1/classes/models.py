@@ -17,6 +17,8 @@ class ClassType(str, Enum):
     SENIOR_SECONDARY = "senior_secondary"
 
 # Enum for learning path
+
+
 class LearningPath(str, Enum):
     SCIENCE = "science"
     ART = "art"
@@ -39,15 +41,15 @@ class SubjectTeachersClass(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
         timezone.utc), nullable=False)
 
-    # ✅ One-to-Many Relationship with Teacher
+    # One-to-Many Relationship with Teacher
     teacher_id = Column(UUID(as_uuid=True), ForeignKey(
         "teachers.id"), nullable=False)
     teacher = relationship(
-        "Teacher", back_populates="subject_teachers_classes")
+        "Teacher", back_populates="subject_teachers_classes", passive_deletes=True)
 
-    # ✅ One-to-Many Relationship with Students
+    # One-to-Many Relationship with Students
     students = relationship(
-        "Student", back_populates="subject_teachers_class", cascade="all, delete-orphan")
+        "TeachersStudent", back_populates="subject_teachers_class", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class TeachersClass(Base):
@@ -65,44 +67,45 @@ class TeachersClass(Base):
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
         timezone.utc), nullable=False)
 
-    # ✅ One-to-One Relationship with Teacher
+    # One-to-One Relationship with Teacher
     teacher_id = Column(UUID(as_uuid=True), ForeignKey(
         "teachers.id"), unique=True, nullable=False)
     teacher = relationship(
-        "Teacher", back_populates="teachers_class", uselist=False)
+        "Teacher", back_populates="teachers_class", uselist=False, passive_deletes=True)
 
-    # ✅ One-to-Many Relationship with Students
+    # One-to-Many Relationship with Students
     students = relationship(
-        "Student", back_populates="teachers_class", cascade="all, delete-orphan")
+        "TeachersStudent", back_populates="teachers_class", cascade="all, delete-orphan", passive_deletes=True)
 
 
-class Student(Base):
+class TeachersStudent(Base):
     """
-    Represents a student assigned to a subject class.
+    Represents a teacher assigned to a student.
     """
-    __tablename__ = "students"
+    __tablename__ = "teachers_students"
 
     id = Column(UUID(as_uuid=True), primary_key=True,
                 default=uuid.uuid4, unique=True, nullable=False)
     firstname = Column(String, nullable=False)
     lastname = Column(String, nullable=False)
     gender = Column(String, nullable=False)
-    phone_number = Column(String, nullable=True)
+    parent_phone_number = Column(String, nullable=True)
     dob = Column(DateTime, nullable=True)
-    email = Column(String, nullable=True)
+    parent_email = Column(String, nullable=True)
     address = Column(String, nullable=True)
     learning_path = Column(String, nullable=False,
                            default=LearningPath.GENERAL_STUDIES.value)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(
         timezone.utc), nullable=False)
 
-    # ✅ Added relationship to `SubjectTeachersClass`
+    # Added relationship to teachers subject class
     subject_teachers_class_id = Column(
         UUID(as_uuid=True), ForeignKey("subject_teachers_classes.id"))
     subject_teachers_class = relationship(
-        "SubjectTeachersClass", back_populates="students")
+        "SubjectTeachersClass", back_populates="students", passive_deletes=True)
 
-    # ✅ Added relationship to `TeachersClass`
+    # Added relationship to teachers main class
     teachers_class_id = Column(UUID(as_uuid=True), ForeignKey(
         "teachers_classes.id"), nullable=True)
-    teachers_class = relationship("TeachersClass", back_populates="students")
+    teachers_class = relationship(
+        "TeachersClass", back_populates="students", passive_deletes=True)
