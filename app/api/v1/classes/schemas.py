@@ -1,65 +1,14 @@
 from pydantic import BaseModel, Field, field_serializer
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
-
-from uuid import UUID
-from datetime import datetime
-from pydantic import BaseModel, Field, field_serializer
 
 from app.api.v1.classes.models import ClassType, LearningPath
 
 
-# 🔁 Shared fields for any teacher class
-class BaseTeacherClassModel(BaseModel):
-    id: UUID
-    class_name: str
-    class_type: str
-    academic_session: str
-    created_at: datetime
-    teacher_id: UUID
-
-    @field_serializer("id", "teacher_id")
-    def serialize_uuid(self, value: UUID) -> str:
-        return str(value)
-
-    @field_serializer("created_at")
-    def serialize_datetime(self, value: datetime) -> str:
-        return value.isoformat()
-
-    class Config:
-        from_attributes = True
-
-
-# Specific to SubjectTeachersClass
-class SubjectTeachersClassModel(BaseTeacherClassModel):
-    subject_name: str
-
-
-# General Teachers Class (no subject_name field)
-class TeachersClassModel(BaseTeacherClassModel):
-    pass
-
-
-# Creation Model for SubjectTeachersClass
-class CreateTeacherSubjectClassModel(BaseModel):
-    class_name: str = Field(..., example="Mathematics 101")
-    class_type: ClassType = Field(..., example="junior_secondary")
-    academic_session: str = Field(..., example="2023/2024")
-    subject_name: str = Field(..., example="Mathematics")
-    teacher_id: UUID = Field(..., example="123e4567-e89b-12d3-a456-426614174000")
-
-
-# Creation Model for TeachersClass
-class CreateTeacherMainClassModel(BaseModel):
-    class_name: str = Field(..., example="Mathematics 101")
-    class_type: ClassType = Field(..., example="junior_secondary")
-    academic_session: str = Field(..., example="2023/2024")
-    teacher_id: UUID = Field(..., example="123e4567-e89b-12d3-a456-426614174000")
-
-
-
+# --------------------------------------------------------
 # ✅ Student Pydantic Model
+# --------------------------------------------------------
 class StudentModel(BaseModel):
     id: UUID
     firstname: str
@@ -85,6 +34,7 @@ class StudentModel(BaseModel):
     class Config:
         from_attributes = True
 
+
 class CreateStudentModel(BaseModel):
     firstname: str = Field(..., example="John")
     lastname: str = Field(..., example="Doe")
@@ -94,8 +44,11 @@ class CreateStudentModel(BaseModel):
     parent_email: Optional[str] = None
     address: Optional[str] = None
     learning_path: LearningPath = Field(..., example="general_studies")
-    subject_teachers_class_id : Optional[UUID] = Field(..., example="123e4567-e89b-12d3-a456-426614174000")
-    teachers_class_id : Optional[UUID] = Field(..., example="123e4567-e89b-12d3-a456-426614174000")
+    subject_teachers_class_id: Optional[UUID] = Field(
+        ..., example="123e4567-e89b-12d3-a456-426614174000")
+    teachers_class_id: Optional[UUID] = Field(
+        ..., example="123e4567-e89b-12d3-a456-426614174000")
+
 
 class UpdateStudentModel(BaseModel):
     firstname: Optional[str]
@@ -108,3 +61,66 @@ class UpdateStudentModel(BaseModel):
     learning_path: Optional[str]
     subject_teachers_class_id: Optional[UUID]
     teachers_class_id: Optional[UUID]
+
+
+# --------------------------------------------------------
+# 🔁 Shared fields for any teacher class
+# --------------------------------------------------------
+class BaseTeacherClassModel(BaseModel):
+    id: UUID
+    class_name: str
+    class_type: str
+    academic_session: str
+    created_at: datetime
+    teacher_id: UUID
+
+    @field_serializer("id", "teacher_id")
+    def serialize_uuid(self, value: UUID) -> str:
+        return str(value)
+
+    @field_serializer("created_at")
+    def serialize_datetime(self, value: datetime) -> str:
+        return value.isoformat()
+
+    class Config:
+        from_attributes = True
+
+
+# --------------------------------------------------------
+# Specific to SubjectTeachersClass
+# --------------------------------------------------------
+class SubjectTeachersClassModel(BaseTeacherClassModel):
+    subject_name: str
+
+
+class SubjectTeachersClassWithStudentsModel(BaseTeacherClassModel):
+    subject_name: str
+    students: List[StudentModel] = []
+
+# General Teachers Class (no subject_name field)
+class TeachersClassModel(BaseTeacherClassModel):
+    pass
+
+
+class TeachersClassWithStudentsModel(BaseTeacherClassModel):
+    students: List[StudentModel] = []
+    
+
+
+# Creation Model for SubjectTeachersClass
+class CreateTeacherSubjectClassModel(BaseModel):
+    class_name: str = Field(..., example="Mathematics 101")
+    class_type: ClassType = Field(..., example="junior_secondary")
+    academic_session: str = Field(..., example="2023/2024")
+    subject_name: str = Field(..., example="Mathematics")
+    teacher_id: UUID = Field(...,
+                             example="123e4567-e89b-12d3-a456-426614174000")
+
+
+# Creation Model for TeachersClass
+class CreateTeacherMainClassModel(BaseModel):
+    class_name: str = Field(..., example="Mathematics 101")
+    class_type: ClassType = Field(..., example="junior_secondary")
+    academic_session: str = Field(..., example="2023/2024")
+    teacher_id: UUID = Field(...,
+                             example="123e4567-e89b-12d3-a456-426614174000")

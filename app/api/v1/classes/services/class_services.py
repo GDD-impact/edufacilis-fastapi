@@ -2,6 +2,7 @@ from typing import List
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 from ..schemas import *
 from typing import Optional
@@ -23,10 +24,11 @@ class MainClassService:
         """
         Get all main classes created by a teacher.
         """
-        query = select(TeachersClass).order_by(desc(TeachersClass.created_at)).offset(skip).limit(limit)
+        query = select(TeachersClass).order_by(
+            desc(TeachersClass.created_at)).offset(skip).limit(limit)
         result = await db.execute(query)
         return result.scalars().all()
-    
+
     async def get_teacher_main_class(
             self,
             teacher_id: UUID,
@@ -35,8 +37,9 @@ class MainClassService:
         """
         Get Main classes created by a teacher.
         """
-        query = select(TeachersClass).filter(
-            TeachersClass.teacher_id == teacher_id)
+        query = select(TeachersClass).options(
+            joinedload(TeachersClass.students)  # Eagerly load students
+        ).filter(TeachersClass.teacher_id == teacher_id)
         result = await db.execute(query)
         return result.scalars().all()
 
@@ -48,7 +51,9 @@ class MainClassService:
         """
         Get a specific main class by ID.
         """
-        query = select(TeachersClass).filter(
+        query = select(TeachersClass).options(
+            joinedload(TeachersClass.students)  # Eagerly load students
+        ).filter(
             TeachersClass.id == class_id)
         result = await db.execute(query)
         return result.scalar_one_or_none()
@@ -153,10 +158,11 @@ class SubjectClassService:
         """
         Get all subject classes created by a teacher.
         """
-        query = select(SubjectTeachersClass).order_by(desc(SubjectTeachersClass.created_at)).offset(skip).limit(limit)
+        query = select(SubjectTeachersClass).order_by(
+            desc(SubjectTeachersClass.created_at)).offset(skip).limit(limit)
         result = await db.execute(query)
         return result.scalars().all()
-    
+
     async def get_all_teachers_sub_classes(
             self,
             teacher_id: UUID,
@@ -180,7 +186,9 @@ class SubjectClassService:
         """
         Get a specific subject class by ID.
         """
-        query = select(SubjectTeachersClass).filter(
+        query = select(SubjectTeachersClass).options(
+            joinedload(SubjectTeachersClass.students)  # Eagerly load students
+        ).filter(
             SubjectTeachersClass.id == class_id)
         result = await db.execute(query)
         return result.scalar_one_or_none()

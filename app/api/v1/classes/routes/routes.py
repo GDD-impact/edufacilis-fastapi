@@ -1,4 +1,3 @@
-from datetime import datetime
 from fastapi import APIRouter, Depends, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
@@ -7,26 +6,27 @@ from app.api.v1.auth.schemas.schemas import UserModel
 from app.core.database import async_get_db
 from typing import List, Optional
 from uuid import UUID
-from .schemas import (
+from ..schemas import (
     CreateTeacherMainClassModel,
     CreateTeacherSubjectClassModel,
     SubjectTeachersClassModel,
+    SubjectTeachersClassWithStudentsModel,
     TeachersClassModel,
     StudentModel,
     CreateStudentModel,
+    TeachersClassWithStudentsModel,
     UpdateStudentModel
 )
 
 from app.api.v1.auth.dependencies import (
     RoleChecker,
-    get_current_user,
 )
 
-from .services.class_services import (
+from ..services.class_services import (
     MainClassService,
     SubjectClassService,
 )
-from .services.students_service import ClassStudentsService
+from ..services.students_service import ClassStudentsService
 
 
 class_router = APIRouter()
@@ -61,7 +61,7 @@ async def get_teacher_main_classes(teacher_id: UUID, _: UserModel = Depends(role
     return await main_class_service.get_teacher_main_class(teacher_id, db)
 
 
-@class_router.get("/main-classes/{class_id}", response_model=Optional[TeachersClassModel])
+@class_router.get("/main-classes/{class_id}", response_model=Optional[TeachersClassWithStudentsModel])
 async def get_teacher_main_class_by_id(class_id: UUID, _: UserModel = Depends(role_checker), db: AsyncSession = Depends(async_get_db)):
     """
     Get a specific main class by ID.
@@ -115,7 +115,7 @@ async def check_main_class_exists(
 @class_router.get("/subject-classes", response_model=List[SubjectTeachersClassModel])
 async def get_all_subject_classes(skip: int = 0, limit: int = 100, _: UserModel = Depends(role_checker), db: AsyncSession = Depends(async_get_db)):
     """
-    Get all subject classes created by a teacher.
+    Get all subject classes
     """
     return await subject_class_service.get_all_subject_classes(skip, limit, db)
 
@@ -130,7 +130,7 @@ async def get_teacher_subject_classes(
     return await subject_class_service.get_all_teachers_sub_classes(teacher_id, skip, limit, db)
 
 
-@class_router.get("/subject-classes/{class_id}", response_model=Optional[SubjectTeachersClassModel])
+@class_router.get("/subject-classes/{class_id}", response_model=Optional[SubjectTeachersClassWithStudentsModel])
 async def get_teacher_subject_class_by_id(class_id: UUID, _: UserModel = Depends(role_checker), db: AsyncSession = Depends(async_get_db)):
     """
     Get a specific subject class by ID.

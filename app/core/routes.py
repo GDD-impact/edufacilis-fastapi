@@ -8,7 +8,7 @@ from app.api.v1.auth.routes.user_routes import user_router
 from app.api.v1.auth.routes.two_factor_routes import twoFA_router
 from app.core.templates import email_preview_router
 from app.api.v1.media.routes import file_router
-from app.api.v1.classes.routes import class_router
+from app.api.v1.classes.routes.routes import class_router
 
 router = APIRouter()
 
