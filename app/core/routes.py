@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.teacher.routes import teacher_router
+from app.api.v1.teacher.routes import teachers_router
 from app.api.v1.student.routes import student_router
 from app.workers.routes import schedule_router
 from app.api.v1.auth.routes.oauth_routes import oauth_router
@@ -19,7 +19,7 @@ router.include_router(oauth_router, prefix="/auth", tags=["authentication (oauth
 
 # user router and profile router
 router.include_router(user_router, prefix="/user", tags=["user"])
-router.include_router(teacher_router, prefix="/teacher", tags=["Teacher"])
+router.include_router(teachers_router, prefix="/teacher", tags=["Teacher"])
 router.include_router(student_router, prefix="/student", tags=["Student"])
 
 # class router

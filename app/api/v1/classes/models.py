@@ -43,7 +43,7 @@ class SubjectTeachersClass(Base):
 
     # One-to-Many Relationship with Teacher
     teacher_id = Column(UUID(as_uuid=True), ForeignKey(
-        "teachers.id"), nullable=False)
+        "teachers.id",ondelete="CASCADE"), nullable=False)
     teacher = relationship(
         "Teacher", back_populates="subject_teachers_classes", passive_deletes=True)
 
@@ -69,13 +69,17 @@ class TeachersClass(Base):
 
     # One-to-One Relationship with Teacher
     teacher_id = Column(UUID(as_uuid=True), ForeignKey(
-        "teachers.id"), unique=True, nullable=False)
+        "teachers.id",ondelete="CASCADE"), unique=True, nullable=False)
     teacher = relationship(
         "Teacher", back_populates="teachers_class", uselist=False, passive_deletes=True)
 
     # One-to-Many Relationship with Students
     students = relationship(
         "TeachersStudent", back_populates="teachers_class", cascade="all, delete-orphan", passive_deletes=True)
+
+    # One-to-Many Relationship with ClassAttendance
+    attendance = relationship(
+        "ClassAttendance", back_populates="teachers_class", cascade="all, delete-orphan", passive_deletes=True)
 
 
 class TeachersStudent(Base):
@@ -100,12 +104,52 @@ class TeachersStudent(Base):
 
     # Added relationship to teachers subject class
     subject_teachers_class_id = Column(
-        UUID(as_uuid=True), ForeignKey("subject_teachers_classes.id"))
+        UUID(as_uuid=True), ForeignKey("subject_teachers_classes.id", ondelete="CASCADE"))
     subject_teachers_class = relationship(
         "SubjectTeachersClass", back_populates="students", passive_deletes=True)
 
     # Added relationship to teachers main class
     teachers_class_id = Column(UUID(as_uuid=True), ForeignKey(
-        "teachers_classes.id"), nullable=True)
+        "teachers_classes.id", ondelete="CASCADE"), nullable=True)
     teachers_class = relationship(
         "TeachersClass", back_populates="students", passive_deletes=True)
+
+    # One-to-Many Relationship with ClassAttendance
+    attendance = relationship(
+        "ClassAttendance", back_populates="student", cascade="all, delete-orphan", passive_deletes=True)
+
+
+class AttendanceStatus(str, Enum):
+    """
+    Enum for attendance status.
+    """
+    PRESENT = "present"
+    ABSENT = "absent"
+    EXCUSED = "excused"
+    NOT_TAKEN = "not_taken"
+
+
+class ClassAttendance(Base):
+    """
+    Represents attendance for a specific class.
+    """
+    __tablename__ = "class_attendance"
+
+    id = Column(UUID(as_uuid=True), primary_key=True,
+                default=uuid.uuid4, unique=True, nullable=False)
+    date = Column(DateTime(timezone=True), default=lambda: datetime.now(
+        timezone.utc), nullable=False)
+    status = Column(String, nullable=False,
+                    default=AttendanceStatus.NOT_TAKEN.value)
+
+    # Foreign key to the TeachersStudent table
+    student_id = Column(UUID(as_uuid=True), ForeignKey(
+        "teachers_students.id", ondelete="CASCADE"), nullable=False)
+    student = relationship(
+        "TeachersStudent", back_populates="attendance", passive_deletes=True)
+
+    # Foreign key to the TeachersClass table
+    teachers_class_id = Column(UUID(as_uuid=True), ForeignKey(
+        "teachers_classes.id", ondelete="CASCADE"), nullable=False)
+    teachers_class = relationship(
+        "TeachersClass", back_populates="attendance", passive_deletes=True)

@@ -22,6 +22,7 @@ class TeacherBase(BaseModel):
         if isinstance(values.get("subjects"), str):
             values["subjects"] = values["subjects"].split(",")
         return values
+    
 
 class TeacherCreate(TeacherBase):
     """Schema for creating a new Teacher"""
@@ -32,6 +33,7 @@ class TeacherResponse(TeacherBase):
     id: UUID
     created_at: datetime
 
+
     # ✅ Convert UUID to String
     @field_serializer("id")
     def serialize_uuid(self, value: UUID) -> str:
@@ -41,3 +43,6 @@ class TeacherResponse(TeacherBase):
     def serialize_created_at(self, value: datetime):
         """Ensure `created_at` is returned as an ISO 8601 string"""
         return value.isoformat()
+    
+    class Config:
+        from_attributes = True
