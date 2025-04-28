@@ -1,9 +1,9 @@
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_serializer, UUID4
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
 
-from app.api.v1.classes.models import ClassType, LearningPath
+from app.api.v1.classes.models import AttendanceStatus, ClassType, LearningPath
 
 
 # --------------------------------------------------------
@@ -98,13 +98,14 @@ class SubjectTeachersClassWithStudentsModel(BaseTeacherClassModel):
     students: List[StudentModel] = []
 
 # General Teachers Class (no subject_name field)
+
+
 class TeachersClassModel(BaseTeacherClassModel):
     pass
 
 
 class TeachersClassWithStudentsModel(BaseTeacherClassModel):
     students: List[StudentModel] = []
-    
 
 
 # Creation Model for SubjectTeachersClass
@@ -124,3 +125,49 @@ class CreateTeacherMainClassModel(BaseModel):
     academic_session: str = Field(..., example="2023/2024")
     teacher_id: UUID = Field(...,
                              example="123e4567-e89b-12d3-a456-426614174000")
+
+
+# --------------------------------------------------------
+# ClassAttendance Pydantic Model
+# --------------------------------------------------------
+
+# Base fields for ClassAttendance
+class ClassAttendanceBase(BaseModel):
+    date: datetime
+    status: str
+    student_id: UUID4
+    teachers_class_id: UUID4
+
+# Schema for creating new ClassAttendance record
+
+
+class ClassAttendanceCreate(ClassAttendanceBase):
+    pass
+
+# Schema for updating ClassAttendance record
+
+
+class ClassAttendanceUpdate(BaseModel):
+    status: AttendanceStatus = Field(..., example="present")
+
+# Schema for responding with ClassAttendance details
+
+
+class ClassAttendanceResponse(ClassAttendanceBase):
+    id: UUID4
+
+    @field_serializer("id", "student_id", "teachers_class_id")
+    def serialize_uuid(self, value: UUID) -> str:
+        return str(value)
+
+    @field_serializer("date")
+    def serialize_date(self, value: datetime) -> str:
+        return value.isoformat()
+
+    class Config:
+        from_attributes = True
+
+
+class BulkUpdateAttendanceStatus(BaseModel):
+    attendance_id: List[ClassAttendanceResponse]
+    status: AttendanceStatus = Field(..., example="present")

@@ -9,6 +9,7 @@ from app.api.v1.auth.routes.two_factor_routes import twoFA_router
 from app.core.templates import email_preview_router
 from app.api.v1.media.routes import file_router
 from app.api.v1.classes.routes.routes import class_router
+from app.api.v1.classes.routes.attendance_routes import attendance_router
 
 router = APIRouter()
 
@@ -24,6 +25,7 @@ router.include_router(student_router, prefix="/student", tags=["Student"])
 
 # class router
 router.include_router(class_router, prefix="/class", tags=["Class"])
+router.include_router(attendance_router, prefix="/attendance", tags=["Class Attendance"])
 
 # email preview router
 router.include_router(email_preview_router, prefix="/preview/email", tags=["email preview"])
